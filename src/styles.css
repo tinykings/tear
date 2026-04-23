@@ -363,7 +363,8 @@ button:disabled {
 .add-tier-row {
   display: flex;
   align-items: center;
-  gap: 0;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
   min-height: 44px;
   padding: 0;
@@ -377,6 +378,21 @@ button:disabled {
 }
 
 .add-tier-row:hover { background: var(--add-row-hover); }
+
+.add-tier-button {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
 
 .add-tier-plus {
   display: inline-flex;
@@ -393,11 +409,16 @@ button:disabled {
   line-height: 1;
 }
 
-.add-tier-row span:last-child {
+.add-tier-button span:last-child {
   padding: 0 14px;
   font-size: 0.76rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+}
+
+.add-tier-return {
+  min-width: 118px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  margin-right: 10px;
 }
 
 .trash-can {
@@ -506,8 +527,9 @@ input:focus-visible {
     padding: 10px 14px;
   }
   .tier-controls button { width: 100%; height: 30px; }
-  .add-tier-row { min-height: 42px; }
+  .add-tier-row { min-height: 42px; gap: 8px; }
   .add-tier-plus { width: 64px; height: 42px; }
+  .add-tier-return { min-width: 104px; margin-right: 0; }
   .trash-can {
     flex-direction: column;
     align-items: flex-start;

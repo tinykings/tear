@@ -151,6 +151,7 @@ function App() {
   }, [theme]);
 
   const itemMap = useMemo(() => new Map(board.items.map((item) => [item.id, item])), [board.items]);
+  const hasTierItems = board.tiers.some((tier) => tier.itemIds.length > 0);
 
   const onAddItem = () => {
     const labels = newItemLabel
@@ -171,6 +172,13 @@ function App() {
     setBoard((current) => ({
       ...current,
       tiers: [...current.tiers, { id: createId(), title: `Tier ${current.tiers.length + 1}`, itemIds: [] }],
+    }));
+  };
+
+  const onReturnAllItems = () => {
+    setBoard((current) => ({
+      ...current,
+      tiers: current.tiers.map((tier) => ({ ...tier, itemIds: [] })),
     }));
   };
 
@@ -338,12 +346,19 @@ function App() {
             />
           ))}
 
-          <button className="add-tier-row" type="button" onClick={onAddTier}>
-            <span className="add-tier-plus" aria-hidden="true">
-              +
-            </span>
-            <span>Add tier</span>
-          </button>
+          <div className="add-tier-row">
+            <button className="add-tier-button" type="button" onClick={onAddTier}>
+              <span className="add-tier-plus" aria-hidden="true">
+                +
+              </span>
+              <span>Add tier</span>
+            </button>
+            {hasTierItems ? (
+              <button className="add-tier-return" type="button" onClick={onReturnAllItems}>
+                Return items
+              </button>
+            ) : null}
+          </div>
 
           <Pool items={board.items.filter((item) => !board.tiers.some((tier) => tier.itemIds.includes(item.id)))} activeItemId={activeItemId} />
 
