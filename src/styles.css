@@ -134,11 +134,36 @@ button, input { font: inherit; }
 }
 
 .actions {
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
   margin-top: 9px;
+}
+
+.actions-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mode-switch {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.mode-switch button {
+  min-width: 78px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.68rem;
+}
+
+.mode-switch button.active {
+  background: var(--button-bg-hover);
 }
 
 .site-mark {
@@ -204,6 +229,18 @@ button:disabled {
   color: var(--input-text);
   border-radius: 6px;
   padding: 10px 12px;
+}
+
+.hidden-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .tier-label input {
@@ -273,8 +310,9 @@ button:disabled {
 .tier-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .tier-count {
@@ -307,7 +345,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-left: 4px;
+  margin-left: auto;
 }
 
 .tier-controls button {
@@ -358,6 +396,20 @@ button:disabled {
   box-shadow: none;
 }
 .item-chip.dragging { opacity: 0.5; }
+
+.item-chip.image-item {
+  width: 88px;
+  height: 88px;
+  min-height: 88px;
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 
 .pool-header {
   display: flex;

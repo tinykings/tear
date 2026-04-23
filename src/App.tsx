@@ -4,13 +4,18 @@ import html2canvas from 'html2canvas';
 
 const logoUrl = `${import.meta.env.BASE_URL}logo.png`;
 
-type Item = { id: string; label: string };
+type TextItem = { id: string; kind: 'text'; label: string };
+type ImageItem = { id: string; kind: 'image'; src: string; name?: string };
+type Item = TextItem | ImageItem;
 type Tier = { id: string; title: string; itemIds: string[] };
 type Board = { title: string; tiers: Tier[]; items: Item[] };
 type Theme = 'light' | 'dark';
+type Mode = 'text' | 'image';
 
 const STORAGE_VERSION = 1;
 const THEME_STORAGE_KEY = 'tear-theme';
+const MODE_STORAGE_KEY = 'tear-mode';
+const IMAGE_BOARD_STORAGE_KEY = 'tear-image-board';
 
 const createId = () => Math.random().toString(36).slice(2, 10);
 
@@ -22,6 +27,14 @@ const defaultBoard = (): Board => ({
     { id: createId(), title: 'B', itemIds: [] },
     { id: createId(), title: 'C', itemIds: [] },
   ],
+  items: [],
+});
+
+const defaultTextBoard = (): Board => defaultBoard();
+
+const defaultImageBoard = (source?: Board): Board => ({
+  title: source?.title ?? 'List',
+  tiers: source?.tiers.map((tier) => ({ ...tier, itemIds: [] })) ?? defaultBoard().tiers,
   items: [],
 });
 
@@ -45,11 +58,59 @@ const decodeState = (value: string | null): Board | null => {
     const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
     const parsed = JSON.parse(new TextDecoder().decode(bytes)) as SerializedState;
     if (parsed.v !== STORAGE_VERSION) return null;
-    return parsed.board;
+    return {
+      ...parsed.board,
+      items: parsed.board.items.map((item) =>
+        (item as Item).kind === 'image'
+          ? (item as ImageItem)
+          : { id: item.id, kind: 'text', label: (item as { label?: string }).label ?? '' },
+      ),
+    };
   } catch {
     return null;
   }
 };
+
+const encodeImageBoard = (board: Board) => JSON.stringify(board);
+
+const decodeImageBoard = (value: string | null): Board | null => {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as Board;
+    return {
+      ...parsed,
+      items: parsed.items
+        .filter((item): item is ImageItem => Boolean(item) && (item as Item).kind === 'image')
+        .map((item) => ({ ...item, kind: 'image' as const })),
+    };
+  } catch {
+    return null;
+  }
+};
+
+const blobToDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+const normalizeImageSource = async (value: string) => {
+  if (value.startsWith('data:')) return value;
+
+  try {
+    const url = new URL(value, window.location.href).toString();
+    const response = await fetch(url);
+    if (!response.ok) return url;
+    const blob = await response.blob();
+    return await blobToDataUrl(blob);
+  } catch {
+    return value;
+  }
+};
+
+const fileToDataUrl = (file: File) => blobToDataUrl(file);
 
 const findItemContainer = (board: Board, itemId: string) => {
   for (const tier of board.tiers) {
@@ -113,13 +174,23 @@ const getInitialTheme = (): Theme => {
 };
 
 function App() {
-  const [board, setBoard] = useState<Board>(() => decodeState(new URLSearchParams(window.location.hash.slice(1)).get('s')) ?? defaultBoard());
-  const [newItemLabel, setNewItemLabel] = useState('');
+  const [textBoard, setTextBoard] = useState<Board>(() => decodeState(new URLSearchParams(window.location.hash.slice(1)).get('s')) ?? defaultTextBoard());
+  const [imageBoard, setImageBoard] = useState<Board>(() => decodeImageBoard(window.sessionStorage.getItem(IMAGE_BOARD_STORAGE_KEY)) ?? defaultImageBoard());
+  const [mode, setMode] = useState<Mode>(() => {
+    const stored = window.sessionStorage.getItem(MODE_STORAGE_KEY);
+    return stored === 'image' ? 'image' : 'text';
+  });
+  const [imageBoardInitialized, setImageBoardInitialized] = useState(() => Boolean(window.sessionStorage.getItem(IMAGE_BOARD_STORAGE_KEY)));
+  const [newItemValue, setNewItemValue] = useState('');
   const [copied, setCopied] = useState(false);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+  const [fileInputKey, setFileInputKey] = useState(0);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const boardRef = React.useRef<HTMLElement | null>(null);
+  const board = mode === 'text' ? textBoard : imageBoard;
+  const setBoard = mode === 'text' ? setTextBoard : setImageBoard;
   const tierTitleWidth = useMemo(() => measureTierTitleWidth(board.tiers.map((tier) => tier.title)), [board.tiers]);
 
   const sensors = useSensors(
@@ -128,11 +199,20 @@ function App() {
   );
 
   useEffect(() => {
-    const encoded = encodeState({ v: STORAGE_VERSION, board });
+    if (mode !== 'text') return;
+    const encoded = encodeState({ v: STORAGE_VERSION, board: textBoard });
     const url = new URL(window.location.href);
     url.hash = `s=${encoded}`;
     window.history.replaceState(null, '', url.toString());
-  }, [board]);
+  }, [board, mode, textBoard]);
+
+  useEffect(() => {
+    window.sessionStorage.setItem(MODE_STORAGE_KEY, mode);
+  }, [mode]);
+
+  useEffect(() => {
+    window.sessionStorage.setItem(IMAGE_BOARD_STORAGE_KEY, encodeImageBoard(imageBoard));
+  }, [imageBoard]);
 
   useEffect(() => {
     if (!copied) return;
@@ -153,19 +233,74 @@ function App() {
   const itemMap = useMemo(() => new Map(board.items.map((item) => [item.id, item])), [board.items]);
   const hasTierItems = board.tiers.some((tier) => tier.itemIds.length > 0);
 
-  const onAddItem = () => {
-    const labels = newItemLabel
+  const syncImageBoardFromText = () => {
+    if (imageBoardInitialized) return;
+    setImageBoard(defaultImageBoard(textBoard));
+    setImageBoardInitialized(true);
+  };
+
+  const switchMode = (nextMode: Mode) => {
+    if (nextMode === 'image') syncImageBoardFromText();
+    setMode(nextMode);
+  };
+
+  const addTextItems = () => {
+    const labels = newItemValue
       .split(',')
       .map((label) => label.trim())
       .filter(Boolean);
 
     if (!labels.length) return;
 
-    setBoard((current) => ({
+    setTextBoard((current) => ({
       ...current,
-      items: [...current.items, ...labels.map((label) => ({ id: createId(), label }))],
+      items: [...current.items, ...labels.map((label) => ({ id: createId(), kind: 'text', label }))],
     }));
-    setNewItemLabel('');
+    setNewItemValue('');
+  };
+
+  const addImageItem = async (src: string, name?: string) => {
+    const normalized = await normalizeImageSource(src);
+    setImageBoard((current) => ({
+      ...current,
+      items: [...current.items, { id: createId(), kind: 'image', src: normalized, name }],
+    }));
+    setNewItemValue('');
+    setFileInputKey((current) => current + 1);
+  };
+
+  const onBrowseImages = () => fileInputRef.current?.click();
+
+  const onFilesSelected = async (files: FileList | null) => {
+    const selectedFiles = Array.from(files ?? []);
+    if (!selectedFiles.length) return;
+
+    const images = await Promise.all(
+      selectedFiles.map(async (file) => ({
+        id: createId(),
+        kind: 'image' as const,
+        src: await fileToDataUrl(file),
+        name: file.name,
+      })),
+    );
+
+    setImageBoard((current) => ({
+      ...current,
+      items: [...current.items, ...images],
+    }));
+    setNewItemValue('');
+    setFileInputKey((current) => current + 1);
+  };
+
+  const onAddItem = async () => {
+    if (mode === 'text') {
+      addTextItems();
+      return;
+    }
+
+    const value = newItemValue.trim();
+    if (!value) return;
+    await addImageItem(value);
   };
 
   const onAddTier = () => {
@@ -223,7 +358,7 @@ function App() {
 
       const canvas = await html2canvas(clone, {
         backgroundColor: '#f4efe6',
-        scale: Math.max(2, window.devicePixelRatio || 1),
+        scale: Math.max(3, window.devicePixelRatio || 1),
         useCORS: true,
         width: clone.scrollWidth,
         height: clone.scrollHeight,
@@ -250,6 +385,8 @@ function App() {
 
   const onReset = () => {
     if (!window.confirm('Reset the tier list and start over?')) return;
+    window.sessionStorage.removeItem(MODE_STORAGE_KEY);
+    window.sessionStorage.removeItem(IMAGE_BOARD_STORAGE_KEY);
     window.location.assign(new URL(import.meta.env.BASE_URL, window.location.href).toString());
   };
 
@@ -297,13 +434,23 @@ function App() {
               placeholder="Add a title"
               onChange={(event) => setBoard((current) => ({ ...current, title: event.target.value }))}
             />
+            <div className="mode-switch" role="tablist" aria-label="Board mode">
+              <button className={mode === 'text' ? 'active' : ''} type="button" onClick={() => switchMode('text')} aria-pressed={mode === 'text'}>
+                Text
+              </button>
+              <button className={mode === 'image' ? 'active' : ''} type="button" onClick={() => switchMode('image')} aria-pressed={mode === 'image'}>
+                Images
+              </button>
+            </div>
           </div>
           <div className="actions">
-            <button onClick={onDownloadPng} disabled={exporting}>{exporting ? 'Saving...' : 'Save'}</button>
-            <button onClick={onCopyLink}>{copied ? 'Link copied' : 'Share'}</button>
-            <a className="site-mark-link" href="https://github.com/tinykings/tear" target="_blank" rel="noreferrer" aria-label="tear on GitHub">
-              <img className="site-mark" src={logoUrl} alt="tear" />
-            </a>
+            <div className="actions-top">
+              <button onClick={onDownloadPng} disabled={exporting}>{exporting ? 'Saving...' : 'Save'}</button>
+              {mode === 'text' ? <button onClick={onCopyLink}>{copied ? 'Link copied' : 'Share'}</button> : null}
+              <a className="site-mark-link" href="https://github.com/tinykings/tear" target="_blank" rel="noreferrer" aria-label="tear on GitHub">
+                <img className="site-mark" src={logoUrl} alt="tear" />
+              </a>
+            </div>
           </div>
         </header>
 
@@ -364,14 +511,25 @@ function App() {
 
           <section className="composer">
             <input
-              value={newItemLabel}
-              placeholder="Add items, comma separated"
-              onChange={(event) => setNewItemLabel(event.target.value)}
+              value={newItemValue}
+              placeholder={mode === 'text' ? 'Add items, comma separated' : 'Paste image URL'}
+              onChange={(event) => setNewItemValue(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') onAddItem();
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void onAddItem();
+                }
               }}
             />
-            <button onClick={onAddItem}>Add item</button>
+            <button onClick={() => void onAddItem()}>{mode === 'text' ? 'Add item' : 'Add image'}</button>
+            {mode === 'image' ? (
+              <>
+                <button type="button" onClick={onBrowseImages}>
+                  Browse
+                </button>
+                <input key={fileInputKey} ref={fileInputRef} className="hidden-file-input" type="file" accept="image/*" multiple onChange={(event) => void onFilesSelected(event.currentTarget.files)} />
+              </>
+            ) : null}
           </section>
         </main>
 
@@ -483,16 +641,28 @@ const tierColors = [
 function DraggableItem({ item, active, style }: { item: Item; active: boolean; style?: React.CSSProperties }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id });
   const transformStyle = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined;
+  const className = `item-chip ${item.kind === 'image' ? 'image-item' : ''} ${active || isDragging ? 'dragging' : ''}`;
+  const itemStyle =
+    item.kind === 'image'
+      ? ({
+          ...style,
+          ...transformStyle,
+          backgroundImage: `url(${item.src})`,
+        } as React.CSSProperties)
+      : transformStyle
+        ? { ...style, ...transformStyle }
+        : style;
 
   return (
     <button
       ref={setNodeRef}
-      className={`item-chip ${active || isDragging ? 'dragging' : ''}`}
-      style={transformStyle ? { ...style, ...transformStyle } : style}
+      className={className}
+      style={itemStyle}
       {...listeners}
       {...attributes}
+      aria-label={item.kind === 'image' ? item.name ?? 'Image item' : item.label}
     >
-      {item.label}
+      {item.kind === 'image' ? null : item.label}
     </button>
   );
 }
