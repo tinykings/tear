@@ -13,7 +13,7 @@ const STORAGE_VERSION = 1;
 const createId = () => Math.random().toString(36).slice(2, 10);
 
 const defaultBoard = (): Board => ({
-  title: 'My Tier List',
+  title: 'List',
   tiers: [
     { id: createId(), title: 'S', itemIds: [] },
     { id: createId(), title: 'A', itemIds: [] },
@@ -127,19 +127,6 @@ function App() {
 
   useEffect(() => {
     document.title = 'tear';
-
-    const setIcon = (rel: string) => {
-      let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = rel;
-        document.head.appendChild(link);
-      }
-      link.href = logoUrl;
-    };
-
-    setIcon('icon');
-    setIcon('apple-touch-icon');
   }, []);
 
   const itemMap = useMemo(() => new Map(board.items.map((item) => [item.id, item])), [board.items]);
