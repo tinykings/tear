@@ -362,8 +362,6 @@ function App() {
 
           <Pool items={board.items.filter((item) => !board.tiers.some((tier) => tier.itemIds.includes(item.id)))} activeItemId={activeItemId} />
 
-          {activeItemId ? <TrashCan activeItemId={activeItemId} /> : null}
-
           <section className="composer">
             <input
               value={newItemLabel}
@@ -430,23 +428,26 @@ function Pool({ items, activeItemId }: { items: Item[]; activeItemId: string | n
   return (
     <section ref={setNodeRef} className={`pool ${isOver ? 'over' : ''}`}>
       <div className="pool-header">
-        <h2>Items</h2>
-        <span>{items.length}</span>
+        <div className="pool-header-copy">
+          <h2>Items</h2>
+          <span>{items.length}</span>
+        </div>
       </div>
       <div className="tier-items">
         {items.map((item) => (
           <DraggableItem key={item.id} item={item} active={activeItemId === item.id} style={{ '--chip-color': '#b8b1a6' } as React.CSSProperties} />
         ))}
+        {activeItemId ? <TrashCan activeItemId={activeItemId} inline /> : null}
       </div>
     </section>
   );
 }
 
-function TrashCan({ activeItemId }: { activeItemId: string | null }) {
+function TrashCan({ activeItemId, inline = false }: { activeItemId: string | null; inline?: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'trash' });
 
   return (
-    <section ref={setNodeRef} className={`trash-can ${isOver && activeItemId ? 'over' : ''}`}>
+    <section ref={setNodeRef} className={`trash-can ${inline ? 'inline' : ''} ${isOver && activeItemId ? 'over' : ''}`}>
       <span className="trash-icon" aria-hidden="true">
         🗑
       </span>
