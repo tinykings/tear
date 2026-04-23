@@ -57,6 +57,11 @@ button, input { font: inherit; }
   padding: 0;
 }
 
+.board-title::placeholder {
+  color: #a9a9a9;
+  font-weight: 400;
+}
+
 .actions,
 .composer {
   display: flex;
@@ -78,7 +83,7 @@ button, input { font: inherit; }
   object-fit: contain;
   display: block;
   margin-left: 4px;
-  margin-top: -5px;
+  margin-top: -2px;
   image-rendering: auto;
 }
 
@@ -132,7 +137,7 @@ button:disabled {
 }
 
 .composer input { flex: 1 1 240px; }
-.composer p { margin: 0; color: #666666; }
+
 
 .board {
   display: grid;
@@ -197,34 +202,35 @@ button:disabled {
 
 .tier-controls {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 4px;
+  padding: 8px 10px;
   border-left: 1px solid #e0e0e0;
   background: #fbfbfb;
 }
 
 .tier-controls button {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   padding: 0;
 }
 
 .tier-move {
-  border-radius: 999px;
-  font-size: 1rem;
-  color: #333333;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #222222;
   background: #ffffff;
   border: 1px solid #cfcfcf;
   box-shadow: none;
 }
 
 .tier-remove {
-  border-radius: 999px;
-  font-size: 1.05rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
   line-height: 1;
-  color: #8d3f3f;
+  color: #6d2f2f;
   background: #ffffff;
   border: 1px solid #d2b0b0;
   box-shadow: none;
@@ -276,10 +282,10 @@ button:disabled {
 .add-tier-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0;
   width: 100%;
-  min-height: 50px;
-  padding: 0 16px;
+  min-height: 44px;
+  padding: 0;
   border: 0;
   border-top: 1px solid #e0e0e0;
   border-radius: 0;
@@ -295,15 +301,22 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
+  width: 72px;
+  height: 44px;
+  border-radius: 0;
   background: #ffffff;
-  border: 1px solid #d2d2d2;
+  border-right: 1px solid #d2d2d2;
   color: #333333;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1;
+}
+
+.add-tier-row span:last-child {
+  padding: 0 14px;
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .trash-can {
@@ -371,9 +384,9 @@ input:focus-visible {
     border-top: 1px solid #e0e0e0;
     padding: 10px 14px;
   }
-  .tier-move { width: 100%; }
-  .tier-remove { width: 100%; }
-  .add-tier-row { padding: 0 14px; }
+  .tier-controls button { width: 100%; height: 30px; }
+  .add-tier-row { min-height: 42px; }
+  .add-tier-plus { width: 64px; height: 42px; }
   .trash-can {
     flex-direction: column;
     align-items: flex-start;

@@ -2,7 +2,7 @@ import { DndContext, PointerSensor, TouchSensor, useDroppable, useDraggable, use
 import React, { useEffect, useMemo, useState } from 'react';
 import html2canvas from 'html2canvas';
 
-const logoUrl = '/logo.png';
+const logoUrl = `${import.meta.env.BASE_URL}logo.png`;
 
 type Item = { id: string; label: string };
 type Tier = { id: string; title: string; itemIds: string[] };
@@ -180,6 +180,17 @@ function App() {
     try {
       await document.fonts.ready;
       clone = node.cloneNode(true) as HTMLElement;
+      const title = document.createElement('div');
+      title.textContent = board.title.trim() || 'tear';
+      title.style.padding = '0 0 16px';
+      title.style.margin = '0 0 16px';
+      title.style.borderBottom = '1px solid #e0e0e0';
+      title.style.fontSize = '42px';
+      title.style.fontWeight = '700';
+      title.style.letterSpacing = '-0.05em';
+      title.style.lineHeight = '1.05';
+      title.style.color = '#111111';
+      clone.prepend(title);
       clone.querySelectorAll('.add-tier-row, .pool, .composer, .trash-can').forEach((element) => element.remove());
       clone.querySelectorAll('.tier-row').forEach((element) => {
         const row = element as HTMLElement;
@@ -262,6 +273,7 @@ function App() {
             <input
               className="board-title"
               value={board.title}
+              placeholder="Add a title"
               onChange={(event) => setBoard((current) => ({ ...current, title: event.target.value }))}
             />
           </div>
@@ -301,6 +313,7 @@ function App() {
                 });
               }}
               onRemove={() =>
+                window.confirm(`Delete the ${tier.title} tier?`) &&
                 setBoard((current) => ({
                   ...current,
                   tiers: current.tiers.filter((entry) => entry.id !== tier.id),
@@ -330,7 +343,6 @@ function App() {
               }}
             />
             <button onClick={onAddItem}>Add item</button>
-            <p>Use commas to add several items at once. The link in your address bar always contains the current board.</p>
           </section>
         </main>
       </div>
