@@ -88,6 +88,8 @@ const decodeImageBoard = (value: string | null): Board | null => {
   }
 };
 
+const IMAGE_ITEM_SIZE = 1024;
+
 const blobToDataUrl = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -96,21 +98,55 @@ const blobToDataUrl = (blob: Blob) =>
     reader.readAsDataURL(blob);
   });
 
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Failed to load image'));
+    image.crossOrigin = 'anonymous';
+    image.src = src;
+  });
+
+const imageBlobToSquareDataUrl = async (blob: Blob) => {
+  const source = URL.createObjectURL(blob);
+  try {
+    const image = await loadImage(source);
+    const canvas = document.createElement('canvas');
+    canvas.width = IMAGE_ITEM_SIZE;
+    canvas.height = IMAGE_ITEM_SIZE;
+    const context = canvas.getContext('2d');
+    if (!context) return await blobToDataUrl(blob);
+
+    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+    const sx = (image.naturalWidth - sourceSize) / 2;
+    const sy = (image.naturalHeight - sourceSize) / 2;
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(image, sx, sy, sourceSize, sourceSize, 0, 0, IMAGE_ITEM_SIZE, IMAGE_ITEM_SIZE);
+    return canvas.toDataURL('image/png');
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+};
+
 const normalizeImageSource = async (value: string) => {
-  if (value.startsWith('data:')) return value;
+  if (value.startsWith('data:')) {
+    const response = await fetch(value);
+    return imageBlobToSquareDataUrl(await response.blob());
+  }
 
   try {
     const url = new URL(value, window.location.href).toString();
     const response = await fetch(url);
     if (!response.ok) return url;
-    const blob = await response.blob();
-    return await blobToDataUrl(blob);
+    return await imageBlobToSquareDataUrl(await response.blob());
   } catch {
     return value;
   }
 };
 
-const fileToDataUrl = (file: File) => blobToDataUrl(file);
+const fileToDataUrl = async (file: File) => imageBlobToSquareDataUrl(file);
 
 const findItemContainer = (board: Board, itemId: string) => {
   for (const tier of board.tiers) {
