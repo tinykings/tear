@@ -293,7 +293,9 @@ function App() {
           <div className="actions">
             <button onClick={onDownloadPng} disabled={exporting}>{exporting ? 'Saving...' : 'Save'}</button>
             <button onClick={onCopyLink}>{copied ? 'Link copied' : 'Share'}</button>
-            <img className="site-mark" src={logoUrl} alt="tear" />
+            <a className="site-mark-link" href="https://github.com/tinykings/tear" target="_blank" rel="noreferrer" aria-label="tear on GitHub">
+              <img className="site-mark" src={logoUrl} alt="tear" />
+            </a>
           </div>
         </header>
 

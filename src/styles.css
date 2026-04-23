@@ -152,6 +152,11 @@ button, input { font: inherit; }
   image-rendering: auto;
 }
 
+.site-mark-link {
+  display: inline-flex;
+  text-decoration: none;
+}
+
 button {
   border: 1px solid var(--button-border);
   border-radius: 6px;
