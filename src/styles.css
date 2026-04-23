@@ -214,6 +214,12 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .board .composer {
   margin-top: 0;
   padding: 14px 16px;
@@ -508,7 +514,6 @@ button:disabled {
 
 .trash-can.inline {
   min-width: 160px;
-  margin-left: auto;
   align-self: stretch;
   padding: 10px 12px;
   border-top: 0;
@@ -613,6 +618,8 @@ input:focus-visible {
   .actions { align-items: stretch; justify-content: stretch; margin-top: 0; }
   .site-mark { margin-left: 0; margin-top: 0; align-self: center; }
   .actions button, .composer button, .tier-label button { width: 100%; }
+  .composer-actions { width: 100%; flex-wrap: wrap; }
+  .composer-actions > button { width: auto; }
   .tier-row, .pool { grid-template-columns: 1fr; }
   .tier-label, .pool-header { border-right: 0; border-bottom: 1px solid var(--border-strong); }
   .tier-label { padding: 14px 14px 12px; }
@@ -637,7 +644,6 @@ input:focus-visible {
 
   .trash-can.inline {
     min-width: 0;
-    margin-left: 0;
     padding: 10px 0 0;
   }
 

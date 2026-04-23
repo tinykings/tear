@@ -468,7 +468,11 @@ function App() {
               className="board-title"
               value={board.title}
               placeholder="Add a title"
-              onChange={(event) => setBoard((current) => ({ ...current, title: event.target.value }))}
+              onChange={(event) => {
+                const title = event.target.value;
+                setTextBoard((current) => ({ ...current, title }));
+                setImageBoard((current) => ({ ...current, title }));
+              }}
             />
             <div className="mode-switch" role="tablist" aria-label="Board mode">
               <button className={mode === 'text' ? 'active' : ''} type="button" onClick={() => switchMode('text')} aria-pressed={mode === 'text'}>
@@ -557,7 +561,10 @@ function App() {
                 }
               }}
             />
-            <button onClick={() => void onAddItem()}>{mode === 'text' ? 'Add item' : 'Add image'}</button>
+            <div className="composer-actions">
+              <button onClick={() => void onAddItem()}>{mode === 'text' ? 'Add item' : 'Add image'}</button>
+              {activeItemId ? <TrashCan activeItemId={activeItemId} inline /> : null}
+            </div>
             {mode === 'image' ? (
               <>
                 <button type="button" onClick={onBrowseImages}>
@@ -637,7 +644,6 @@ function Pool({ items, activeItemId }: { items: Item[]; activeItemId: string | n
         {items.map((item) => (
           <DraggableItem key={item.id} item={item} active={activeItemId === item.id} style={{ '--chip-color': '#b8b1a6' } as React.CSSProperties} />
         ))}
-        {activeItemId ? <TrashCan activeItemId={activeItemId} inline /> : null}
       </div>
     </section>
   );
