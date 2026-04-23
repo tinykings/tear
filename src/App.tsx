@@ -232,6 +232,11 @@ function App() {
     }
   };
 
+  const onReset = () => {
+    if (!window.confirm('Reset the tier list and start over?')) return;
+    window.location.assign(new URL(import.meta.env.BASE_URL, window.location.href).toString());
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -345,6 +350,10 @@ function App() {
             <button onClick={onAddItem}>Add item</button>
           </section>
         </main>
+
+        <button className="reset-button" type="button" onClick={onReset}>
+          RESET
+        </button>
       </div>
     </DndContext>
   );
