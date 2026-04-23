@@ -1,6 +1,11 @@
-# tear
+<p align="center">
+  <img src="public/logo.png" alt="Blink Logo" width="120" />
+</p>
 
-A shareable tier list editor with URL-based state, PNG export. Hosted on GitHub Pages.
+<h3 align="center">A shareable tier list editor</h3>
+<h4 align="center">https://tinykings.github.io/tear/</h4>
+
+
 
 ## Development
 
