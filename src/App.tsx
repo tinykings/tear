@@ -378,7 +378,7 @@ function TierRow({ tier, tierIndex, items, onTitleChange, onRemove, onMoveUp, on
   return (
     <section ref={setNodeRef} className={`tier-row ${isOver ? 'over' : ''}`}>
       <div className="tier-label">
-        <input value={tier.title} onChange={(event) => onTitleChange(event.target.value)} />
+        <input size={Math.max(tier.title.length, 1)} value={tier.title} onChange={(event) => onTitleChange(event.target.value)} />
       </div>
       <div className="tier-items">
         {items.map((item) => (

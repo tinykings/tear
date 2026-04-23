@@ -201,6 +201,12 @@ button:disabled {
   padding: 10px 12px;
 }
 
+.tier-label input {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+}
+
 .composer input { flex: 1 1 240px; }
 
 .board {
