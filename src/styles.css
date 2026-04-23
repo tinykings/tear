@@ -202,9 +202,15 @@ button:disabled {
 }
 
 .tier-label input {
+  box-sizing: content-box;
   display: inline-block;
   width: auto;
-  max-width: 100%;
+  min-width: 0;
+}
+
+.tier-label input:hover {
+  border-color: var(--button-border);
+  background: var(--surface);
 }
 
 .composer input { flex: 1 1 240px; }

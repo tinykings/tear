@@ -101,6 +101,11 @@ const deleteItem = (board: Board, itemId: string) => {
   board.tiers = board.tiers.map((tier) => ({ ...tier, itemIds: tier.itemIds.filter((id) => id !== itemId) }));
 };
 
+const measureTierTitleWidth = (titles: string[]) => {
+  const widest = titles.reduce((max, title) => Math.max(max, title.length), 0);
+  return Math.max(1, widest);
+};
+
 const getInitialTheme = (): Theme => {
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (stored === 'light' || stored === 'dark') return stored;
@@ -115,6 +120,7 @@ function App() {
   const [exporting, setExporting] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
   const boardRef = React.useRef<HTMLElement | null>(null);
+  const tierTitleWidth = useMemo(() => measureTierTitleWidth(board.tiers.map((tier) => tier.title)), [board.tiers]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -297,6 +303,7 @@ function App() {
               key={tier.id}
               tier={tier}
               tierIndex={index}
+              titleWidth={tierTitleWidth}
               items={tier.itemIds.map((id) => itemMap.get(id)).filter(Boolean) as Item[]}
               activeItemId={activeItemId}
               onTitleChange={(title) => {
@@ -371,14 +378,14 @@ function App() {
   );
 }
 
-function TierRow({ tier, tierIndex, items, onTitleChange, onRemove, onMoveUp, onMoveDown, activeItemId }: { tier: Tier; tierIndex: number; items: Item[]; onTitleChange: (title: string) => void; onRemove: () => void; onMoveUp: () => void; onMoveDown: () => void; activeItemId: string | null }) {
+function TierRow({ tier, tierIndex, titleWidth, items, onTitleChange, onRemove, onMoveUp, onMoveDown, activeItemId }: { tier: Tier; tierIndex: number; titleWidth: number; items: Item[]; onTitleChange: (title: string) => void; onRemove: () => void; onMoveUp: () => void; onMoveDown: () => void; activeItemId: string | null }) {
   const { setNodeRef, isOver } = useDroppable({ id: `tier:${tier.id}` });
   const chipStyle = { '--chip-color': tierColors[tierIndex % tierColors.length] } as React.CSSProperties;
 
   return (
     <section ref={setNodeRef} className={`tier-row ${isOver ? 'over' : ''}`}>
       <div className="tier-label">
-        <input size={Math.max(tier.title.length, 1)} value={tier.title} onChange={(event) => onTitleChange(event.target.value)} />
+        <input maxLength={12} style={{ width: `calc(${titleWidth + 4}ch + 28px)` }} value={tier.title} onChange={(event) => onTitleChange(event.target.value)} />
       </div>
       <div className="tier-items">
         {items.map((item) => (
