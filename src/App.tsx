@@ -2,6 +2,8 @@ import { DndContext, PointerSensor, TouchSensor, useDroppable, useDraggable, use
 import React, { useEffect, useMemo, useState } from 'react';
 import html2canvas from 'html2canvas';
 
+const logoUrl = '/logo.png';
+
 type Item = { id: string; label: string };
 type Tier = { id: string; title: string; itemIds: string[] };
 type Board = { title: string; tiers: Tier[]; items: Item[] };
@@ -123,6 +125,23 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [copied]);
 
+  useEffect(() => {
+    document.title = 'tear';
+
+    const setIcon = (rel: string) => {
+      let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = rel;
+        document.head.appendChild(link);
+      }
+      link.href = logoUrl;
+    };
+
+    setIcon('icon');
+    setIcon('apple-touch-icon');
+  }, []);
+
   const itemMap = useMemo(() => new Map(board.items.map((item) => [item.id, item])), [board.items]);
 
   const onAddItem = () => {
@@ -240,7 +259,6 @@ function App() {
       <div className="app-shell">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Share by URL</p>
             <input
               className="board-title"
               value={board.title}
@@ -248,8 +266,9 @@ function App() {
             />
           </div>
           <div className="actions">
-            <button onClick={onDownloadPng} disabled={exporting}>{exporting ? 'Saving...' : 'Download PNG'}</button>
-            <button onClick={onCopyLink}>{copied ? 'Link copied' : 'Copy share link'}</button>
+            <button onClick={onDownloadPng} disabled={exporting}>{exporting ? 'Saving...' : 'Save'}</button>
+            <button onClick={onCopyLink}>{copied ? 'Link copied' : 'Share'}</button>
+            <img className="site-mark" src={logoUrl} alt="tear" />
           </div>
         </header>
 
@@ -383,18 +402,18 @@ function TrashCan({ activeItemId }: { activeItemId: string | null }) {
 }
 
 const tierColors = [
-  '#d97f5d',
-  '#7b96c8',
-  '#6f9d90',
-  '#a87cc0',
-  '#c07b8d',
-  '#c69a54',
-  '#8fa66f',
-  '#d08a6a',
-  '#7394a8',
-  '#b58ab5',
-  '#b39a77',
-  '#9f7d67',
+  '#d45c56',
+  '#4e7fc7',
+  '#6a9a7c',
+  '#cf8e3d',
+  '#9971b8',
+  '#8a8f9b',
+  '#b66c62',
+  '#5e88a8',
+  '#85a35f',
+  '#c58b68',
+  '#7e6bb2',
+  '#a08d5e',
 ];
 
 function DraggableItem({ item, active, style }: { item: Item; active: boolean; style?: React.CSSProperties }) {
