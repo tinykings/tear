@@ -396,27 +396,33 @@ function App() {
 function TierRow({ tier, tierIndex, titleWidth, items, onTitleChange, onRemove, onMoveUp, onMoveDown, activeItemId }: { tier: Tier; tierIndex: number; titleWidth: number; items: Item[]; onTitleChange: (title: string) => void; onRemove: () => void; onMoveUp: () => void; onMoveDown: () => void; activeItemId: string | null }) {
   const { setNodeRef, isOver } = useDroppable({ id: `tier:${tier.id}` });
   const chipStyle = { '--chip-color': tierColors[tierIndex % tierColors.length] } as React.CSSProperties;
+  const itemCount = items.length;
 
   return (
     <section ref={setNodeRef} className={`tier-row ${isOver ? 'over' : ''}`}>
       <div className="tier-label">
         <input maxLength={12} style={{ width: `calc(${titleWidth + 4}ch + 28px)` }} value={tier.title} onChange={(event) => onTitleChange(event.target.value)} />
+        <div className="tier-meta">
+          <span className="tier-count" aria-label={`${itemCount} items in ${tier.title}`}>
+            {itemCount}
+          </span>
+          <div className="tier-controls" aria-label={`${tier.title} tier controls`}>
+            <button className="tier-move" type="button" onClick={onMoveUp} aria-label={`Move ${tier.title} up`}>
+              ↑
+            </button>
+            <button className="tier-move" type="button" onClick={onMoveDown} aria-label={`Move ${tier.title} down`}>
+              ↓
+            </button>
+            <button className="tier-remove" type="button" onClick={onRemove} aria-label={`Remove ${tier.title} tier`}>
+              ×
+            </button>
+          </div>
+        </div>
       </div>
       <div className="tier-items">
         {items.map((item) => (
           <DraggableItem key={item.id} item={item} active={activeItemId === item.id} style={chipStyle} />
         ))}
-      </div>
-      <div className="tier-controls" aria-label={`${tier.title} tier controls`}>
-        <button className="tier-move" type="button" onClick={onMoveUp} aria-label={`Move ${tier.title} up`}>
-          ↑
-        </button>
-        <button className="tier-move" type="button" onClick={onMoveDown} aria-label={`Move ${tier.title} down`}>
-          ↓
-        </button>
-        <button className="tier-remove" type="button" onClick={onRemove} aria-label={`Remove ${tier.title} tier`}>
-          ×
-        </button>
       </div>
     </section>
   );

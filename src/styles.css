@@ -240,7 +240,7 @@ button:disabled {
 
 .tier-row {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) auto;
+  grid-template-columns: max-content minmax(0, 1fr);
   min-height: 72px;
   background: transparent;
 }
@@ -270,6 +270,30 @@ button:disabled {
   border-right: 1px solid var(--border-strong);
 }
 
+.tier-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tier-count {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--button-bg);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
 .tier-label input {
   width: max-content;
   min-width: 3ch;
@@ -279,17 +303,11 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.tier-label button { padding-inline: 12px; font-size: 0.72rem; }
-
 .tier-controls {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
+  align-items: center;
   gap: 4px;
-  padding: 8px 10px;
-  border-left: 1px solid var(--border-strong);
-  background: var(--tier-controls-bg);
+  margin-left: 4px;
 }
 
 .tier-controls button {
@@ -556,12 +574,6 @@ input:focus-visible {
     justify-content: space-between;
   }
   .tier-items { padding: 12px 14px 14px; }
-  .tier-controls {
-    flex-direction: row;
-    border-left: 0;
-    border-top: 1px solid var(--border-strong);
-    padding: 10px 14px;
-  }
   .tier-controls button { width: 100%; height: 30px; }
   .add-tier-row { min-height: 42px; gap: 8px; }
   .add-tier-plus { width: 64px; height: 42px; }
