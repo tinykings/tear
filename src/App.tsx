@@ -7,8 +7,10 @@ const logoUrl = `${import.meta.env.BASE_URL}logo.png`;
 type Item = { id: string; label: string };
 type Tier = { id: string; title: string; itemIds: string[] };
 type Board = { title: string; tiers: Tier[]; items: Item[] };
+type Theme = 'light' | 'dark';
 
 const STORAGE_VERSION = 1;
+const THEME_STORAGE_KEY = 'tear-theme';
 
 const createId = () => Math.random().toString(36).slice(2, 10);
 
@@ -99,12 +101,19 @@ const deleteItem = (board: Board, itemId: string) => {
   board.tiers = board.tiers.map((tier) => ({ ...tier, itemIds: tier.itemIds.filter((id) => id !== itemId) }));
 };
 
+const getInitialTheme = (): Theme => {
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
 function App() {
   const [board, setBoard] = useState<Board>(() => decodeState(new URLSearchParams(window.location.hash.slice(1)).get('s')) ?? defaultBoard());
   const [newItemLabel, setNewItemLabel] = useState('');
   const [copied, setCopied] = useState(false);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
   const boardRef = React.useRef<HTMLElement | null>(null);
 
   const sensors = useSensors(
@@ -128,6 +137,12 @@ function App() {
   useEffect(() => {
     document.title = 'tear';
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
 
   const itemMap = useMemo(() => new Map(board.items.map((item) => [item.id, item])), [board.items]);
 
@@ -340,6 +355,16 @@ function App() {
 
         <button className="reset-button" type="button" onClick={onReset}>
           RESET
+        </button>
+
+        <button
+          className="theme-button"
+          type="button"
+          onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+        >
+          <span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span>
         </button>
       </div>
     </DndContext>
