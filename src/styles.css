@@ -399,9 +399,15 @@ button:disabled {
   font-weight: 700;
   border-radius: 8px;
   cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
   box-shadow: none;
 }
-.item-chip.dragging { opacity: 0.5; }
+.item-chip.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
 
 .item-chip.image-item {
   width: 88px;
